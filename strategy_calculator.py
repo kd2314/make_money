@@ -68,7 +68,7 @@ def calculate_macd_indicators(df):
 
 def calculate_signal_returns(df):
     """
-    计算信号出现后的收益率
+    计算信号出现后的收益率，只返回最后一个交易日出现信号的股票
     
     Parameters:
     -----------
@@ -78,45 +78,67 @@ def calculate_signal_returns(df):
     Returns:
     --------
     dict
-        包含信号出现后3日、5日、10日收益率的字典
+        包含当日信号和历史信号收益率的字典
     """
     returns = {}
+    last_date = df.index[-1]  # 最后一个交易日
     
-    # 计算顶结构信号的收益率
-    top_signals = df[df['顶结构']].index
-    if len(top_signals) >= 1:
-        last_signal = top_signals[-1]
-        returns['last_top'] = {
-            '3d': calculate_return(df, last_signal, 3),
-            '5d': calculate_return(df, last_signal, 5),
-            '10d': calculate_return(df, last_signal, 10)
-        }
-        
-        if len(top_signals) >= 2:
-            second_last_signal = top_signals[-2]
-            returns['second_last_top'] = {
-                '3d': calculate_return(df, second_last_signal, 3),
-                '5d': calculate_return(df, second_last_signal, 5),
-                '10d': calculate_return(df, second_last_signal, 10)
-            }
+    # 检查最后一个交易日是否有信号
+    has_top_signal = df.loc[last_date, '顶结构']
+    has_bottom_signal = df.loc[last_date, '底结构']
     
-    # 计算底结构信号的收益率
-    bottom_signals = df[df['底结构']].index
-    if len(bottom_signals) >= 1:
-        last_signal = bottom_signals[-1]
-        returns['last_bottom'] = {
-            '3d': calculate_return(df, last_signal, 3),
-            '5d': calculate_return(df, last_signal, 5),
-            '10d': calculate_return(df, last_signal, 10)
-        }
+    if not (has_top_signal or has_bottom_signal):
+        return None  # 如果最后一个交易日没有信号，返回None
+    
+    returns['last_date'] = last_date
+    
+    # 如果有顶结构信号
+    if has_top_signal:
+        returns['signal_type'] = '顶结构'
+        # 获取历史顶结构信号日期（不包括最后一个交易日）
+        historical_signals = df[df['顶结构']].index[:-1]
         
-        if len(bottom_signals) >= 2:
-            second_last_signal = bottom_signals[-2]
-            returns['second_last_bottom'] = {
-                '3d': calculate_return(df, second_last_signal, 3),
-                '5d': calculate_return(df, second_last_signal, 5),
-                '10d': calculate_return(df, second_last_signal, 10)
+        if len(historical_signals) >= 1:
+            last_signal = historical_signals[-1]
+            returns['last_signal'] = {
+                'date': last_signal,
+                '3d': calculate_return(df, last_signal, 3),
+                '5d': calculate_return(df, last_signal, 5),
+                '10d': calculate_return(df, last_signal, 10)
             }
+            
+            if len(historical_signals) >= 2:
+                second_last_signal = historical_signals[-2]
+                returns['second_last_signal'] = {
+                    'date': second_last_signal,
+                    '3d': calculate_return(df, second_last_signal, 3),
+                    '5d': calculate_return(df, second_last_signal, 5),
+                    '10d': calculate_return(df, second_last_signal, 10)
+                }
+    
+    # 如果有底结构信号
+    if has_bottom_signal:
+        returns['signal_type'] = '底结构'
+        # 获取历史底结构信号日期（不包括最后一个交易日）
+        historical_signals = df[df['底结构']].index[:-1]
+        
+        if len(historical_signals) >= 1:
+            last_signal = historical_signals[-1]
+            returns['last_signal'] = {
+                'date': last_signal,
+                '3d': calculate_return(df, last_signal, 3),
+                '5d': calculate_return(df, last_signal, 5),
+                '10d': calculate_return(df, last_signal, 10)
+            }
+            
+            if len(historical_signals) >= 2:
+                second_last_signal = historical_signals[-2]
+                returns['second_last_signal'] = {
+                    'date': second_last_signal,
+                    '3d': calculate_return(df, second_last_signal, 3),
+                    '5d': calculate_return(df, second_last_signal, 5),
+                    '10d': calculate_return(df, second_last_signal, 10)
+                }
     
     return returns
 

@@ -13,7 +13,7 @@ INDEX_MAPPING = {
 
 def analyze_stocks(stock_data_dict):
     """
-    分析所有股票数据并返回满足条件的结果
+    分析所有股票数据并返回当日满足条件的结果
     """
     results = []
     
@@ -27,34 +27,38 @@ def analyze_stocks(stock_data_dict):
         # 计算信号收益率
         returns = calculate_signal_returns(df)
         
-        # 检查是否有顶底结构信号
-        has_top_signal = df['顶结构'].any()
-        has_bottom_signal = df['底结构'].any()
-        
-        if has_top_signal or has_bottom_signal:
+        # 只处理当日有信号的股票
+        if returns is not None:
             result = {
                 '股票代码': stock_code,
                 '股票名称': stock_name,
-                '信号类型': []
+                '信号类型': returns['signal_type'],
+                '信号日期': returns['last_date'].strftime('%Y-%m-%d')
             }
             
-            # 处理顶结构信号
-            if has_top_signal and 'last_top' in returns:
-                result['信号类型'].append('顶结构')
-                result['最近顶结构日期'] = df[df['顶结构']].index[-1].strftime('%Y-%m-%d')
-                result['顶结构3日涨跌幅'] = f"{returns['last_top']['3d']:.2f}%" if returns['last_top']['3d'] is not None else "无数据"
-                result['顶结构5日涨跌幅'] = f"{returns['last_top']['5d']:.2f}%" if returns['last_top']['5d'] is not None else "无数据"
-                result['顶结构10日涨跌幅'] = f"{returns['last_top']['10d']:.2f}%" if returns['last_top']['10d'] is not None else "无数据"
+            # 添加历史信号信息
+            if 'last_signal' in returns:
+                result['上次信号日期'] = returns['last_signal']['date'].strftime('%Y-%m-%d')
+                result['上次信号3日涨跌幅'] = f"{returns['last_signal']['3d']:.2f}%" if returns['last_signal']['3d'] is not None else "无数据"
+                result['上次信号5日涨跌幅'] = f"{returns['last_signal']['5d']:.2f}%" if returns['last_signal']['5d'] is not None else "无数据"
+                result['上次信号10日涨跌幅'] = f"{returns['last_signal']['10d']:.2f}%" if returns['last_signal']['10d'] is not None else "无数据"
+            else:
+                result['上次信号日期'] = "无历史信号"
+                result['上次信号3日涨跌幅'] = "无数据"
+                result['上次信号5日涨跌幅'] = "无数据"
+                result['上次信号10日涨跌幅'] = "无数据"
             
-            # 处理底结构信号
-            if has_bottom_signal and 'last_bottom' in returns:
-                result['信号类型'].append('底结构')
-                result['最近底结构日期'] = df[df['底结构']].index[-1].strftime('%Y-%m-%d')
-                result['底结构3日涨跌幅'] = f"{returns['last_bottom']['3d']:.2f}%" if returns['last_bottom']['3d'] is not None else "无数据"
-                result['底结构5日涨跌幅'] = f"{returns['last_bottom']['5d']:.2f}%" if returns['last_bottom']['5d'] is not None else "无数据"
-                result['底结构10日涨跌幅'] = f"{returns['last_bottom']['10d']:.2f}%" if returns['last_bottom']['10d'] is not None else "无数据"
+            if 'second_last_signal' in returns:
+                result['上上次信号日期'] = returns['second_last_signal']['date'].strftime('%Y-%m-%d')
+                result['上上次信号3日涨跌幅'] = f"{returns['second_last_signal']['3d']:.2f}%" if returns['second_last_signal']['3d'] is not None else "无数据"
+                result['上上次信号5日涨跌幅'] = f"{returns['second_last_signal']['5d']:.2f}%" if returns['second_last_signal']['5d'] is not None else "无数据"
+                result['上上次信号10日涨跌幅'] = f"{returns['second_last_signal']['10d']:.2f}%" if returns['second_last_signal']['10d'] is not None else "无数据"
+            else:
+                result['上上次信号日期'] = "无历史信号"
+                result['上上次信号3日涨跌幅'] = "无数据"
+                result['上上次信号5日涨跌幅'] = "无数据"
+                result['上上次信号10日涨跌幅'] = "无数据"
             
-            result['信号类型'] = ', '.join(result['信号类型'])
             results.append(result)
     
     return pd.DataFrame(results)
@@ -140,28 +144,30 @@ def main():
                     results_df = analyze_stocks(stock_data_dict)
                     
                     if not results_df.empty:
-                        st.success(f'分析完成，发现 {len(results_df)} 只股票出现信号')
+                        st.success(f'分析完成，发现 {len(results_df)} 只股票今日出现信号')
                         
                         # 分别展示顶结构和底结构的股票
                         st.subheader('顶结构信号股票')
-                        top_signals = results_df[results_df['信号类型'].str.contains('顶结构', na=False)]
+                        top_signals = results_df[results_df['信号类型'] == '顶结构']
                         if not top_signals.empty:
                             st.dataframe(top_signals[[
-                                '股票代码', '股票名称', '最近顶结构日期',
-                                '顶结构3日涨跌幅', '顶结构5日涨跌幅', '顶结构10日涨跌幅'
+                                '股票代码', '股票名称', '信号日期',
+                                '上次信号日期', '上次信号3日涨跌幅', '上次信号5日涨跌幅', '上次信号10日涨跌幅',
+                                '上上次信号日期', '上上次信号3日涨跌幅', '上上次信号5日涨跌幅', '上上次信号10日涨跌幅'
                             ]])
                         else:
-                            st.write('没有股票出现顶结构信号')
+                            st.write('今日没有股票出现顶结构信号')
                         
                         st.subheader('底结构信号股票')
-                        bottom_signals = results_df[results_df['信号类型'].str.contains('底结构', na=False)]
+                        bottom_signals = results_df[results_df['信号类型'] == '底结构']
                         if not bottom_signals.empty:
                             st.dataframe(bottom_signals[[
-                                '股票代码', '股票名称', '最近底结构日期',
-                                '底结构3日涨跌幅', '底结构5日涨跌幅', '底结构10日涨跌幅'
+                                '股票代码', '股票名称', '信号日期',
+                                '上次信号日期', '上次信号3日涨跌幅', '上次信号5日涨跌幅', '上次信号10日涨跌幅',
+                                '上上次信号日期', '上上次信号3日涨跌幅', '上上次信号5日涨跌幅', '上上次信号10日涨跌幅'
                             ]])
                         else:
-                            st.write('没有股票出现底结构信号')
+                            st.write('今日没有股票出现底结构信号')
                     else:
                         st.warning('没有发现满足条件的股票')
                 else:
