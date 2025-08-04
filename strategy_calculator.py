@@ -52,12 +52,12 @@ def calculate_macd_indicators(df):
     df['N1'] = BARSLAST(df['死叉'])  # 最近一次死叉的位置
     
     # 计算顶底结构信号
-    df['直接TG'] = (df['DIF']<df['DIF4'] & df['DIF顶转折'].shift(1) & (df['DIF'] > 0))
-    df['隔峰TG'] = (df['DIF']<df['DIF4'] & df['DIF顶转折'].shift(1) & (df['DIF'] > 0))
+    df['直接TG'] = ((df['DIF'] < df['DIF4']) & df['DIF顶转折'].shift(1) & (df['DIF'] > 0))
+    df['隔峰TG'] = ((df['DIF'] < df['DIF4']) & df['DIF顶转折'].shift(1) & (df['DIF'] > 0))
     df['TG'] = df['直接TG'] | df['隔峰TG']
     
-    df['直接BG'] = (df['DIF']>df['DIF4'] & df['DIF底转折'].shift(1) & (df['DIF'] < 0))
-    df['隔峰BG'] = (df['DIF']>df['DIF4'] & df['DIF底转折'].shift(1) & (df['DIF'] < 0))
+    df['直接BG'] = ((df['DIF'] > df['DIF4']) & df['DIF底转折'].shift(1) & (df['DIF'] < 0))
+    df['隔峰BG'] = ((df['DIF'] > df['DIF4']) & df['DIF底转折'].shift(1) & (df['DIF'] < 0))
     df['BG'] = df['直接BG'] | df['隔峰BG']
     
     # 结构信号
