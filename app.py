@@ -113,21 +113,23 @@ def main():
     now = datetime.now(beijing_tz)
     
     # 获取当前北京时间的日期部分
-    end_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_date = now.strftime('%Y-%m-%d')
     
     # 如果当前时间是早上9:30之前，使用前一个交易日作为结束日期
     if now.hour < 9 or (now.hour == 9 and now.minute < 30):
-        end_date = end_date - timedelta(days=1)
-        
+        # 将end_date转回datetime进行计算
+        end_date_dt = datetime.strptime(end_date, '%Y-%m-%d') - timedelta(days=1)
+        end_date = end_date_dt.strftime('%Y-%m-%d')
+    
     # 计算开始日期
+    end_date_dt = datetime.strptime(end_date, '%Y-%m-%d')
     if time_range == '近一年':
-        start_date = end_date - timedelta(days=365)
+        start_date_dt = end_date_dt - timedelta(days=365)
     else:  # 近两年
-        start_date = end_date - timedelta(days=730)
+        start_date_dt = end_date_dt - timedelta(days=730)
     
     # 转换为字符串格式
-    start_date = start_date.strftime('%Y-%m-%d')
-    end_date = end_date.strftime('%Y-%m-%d')
+    start_date = start_date_dt.strftime('%Y-%m-%d')
     
     # 显示日期范围
     st.sidebar.info(f'数据日期范围：{start_date} 至 {end_date}')
