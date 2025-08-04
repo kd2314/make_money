@@ -99,7 +99,7 @@ def main():
     # 添加手动刷新按钮
     if st.sidebar.button('立即刷新数据'):
         st.cache_data.clear()
-        st.experimental_rerun()
+        st.rerun()
     
     # 侧边栏 - 时间范围选择
     st.sidebar.header('参数设置')
@@ -192,7 +192,7 @@ def auto_refresh_data():
     # 清除缓存
     st.cache_data.clear()
     # 重新运行应用
-    st.experimental_rerun()
+    st.rerun()
 
 if __name__ == "__main__":
     main()
