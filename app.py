@@ -131,8 +131,9 @@ def main():
     # 转换为字符串格式
     start_date = start_date_dt.strftime('%Y-%m-%d')
     
-    # 显示日期范围
+    # 显示日期范围和当前时间
     st.sidebar.info(f'数据日期范围：{start_date} 至 {end_date}')
+    st.sidebar.info(f'当前北京时间：{now.strftime("%Y-%m-%d %H:%M:%S")}')
     
     # 选择指数
     st.sidebar.header('指数选择')
